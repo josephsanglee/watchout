@@ -19,17 +19,35 @@ var gameBoard = d3.select('.board').append('svg:svg')
 
 var enemiesData = new Array(gameOptions.nEnemies);
 //creates all enemies initially
-for (var i = 0; i < enemiesData.length; i++) {
-  enemiesData[i] = {id: i,
+var randomizeEnemies = function () {
+  for (var i = 0; i < enemiesData.length; i++) {
+    enemiesData[i] = {id: i,
                     x: Math.random() * gameOptions.width,
                     y: Math.random() * gameOptions.height};
-}
+  }
+};
 
-var enemies = gameBoard.selectAll('circle.enemy')
-  .data(enemiesData, function(d) { return d.id; })
-  .enter()
-  .append('svg:circle')
-  .attr('class', 'enemy')
-  .attr('cx', function(d) { return d.x; })
-  .attr('cy', function(d) { return d.y; })
-  .attr('r', gameOptions.padding);
+var render = function() {
+  randomizeEnemies();
+
+
+  var enemies = gameBoard.selectAll('circle.enemy').data(enemiesData, function(d) { return d.id; });
+
+  enemies.enter()
+    .append('svg:circle')
+    .attr('class', 'enemy')
+    .attr('cx', function(d) { return d.x; })
+    .attr('cy', function(d) { return d.y; })
+    .attr('r', gameOptions.padding);
+
+
+  enemies.exit()
+    .remove();
+
+  enemies.transition()
+    .duration(1000)
+    .attr('cx', function(d) { return d.x; })
+    .attr('cy', function(d) { return d.y; });
+};
+
+setInterval(render, 2000);
