@@ -49,10 +49,13 @@ var render = function() {
 
   //defines dragging behavior of player circle
   var drag = d3.behavior.drag()
-             .on('dragstart', function() { player.style('fill', 'green'); })
-             .on('drag', function() {
-               player.attr('cx', d3.event.x)
-                     .attr('cy', d3.event.y); })
+               .on('dragstart', function() { player.style('fill', 'green'); })
+               .on('drag', function() {
+                 player.attr('cx', d3.event.x)
+                       .attr('cy', d3.event.y);
+                 playerData[0].x = d3.event.x;
+                 playerData[0].y = d3.event.y;
+               })
              .on('dragend', function() { player.style('fill', 'red'); });
 
 
@@ -73,7 +76,7 @@ var render = function() {
          .remove();
 
   enemies.transition()
-         .duration(1000)
+         .duration(3000)
          .attr('cx', function(d) { return d.x; })
          .attr('cy', function(d) { return d.y; });
   
@@ -81,18 +84,36 @@ var render = function() {
   player.enter()
         .append('svg:circle')
         .attr('class', 'player')
-        .attr('cx', gameOptions.width / 2)
-        .attr('cy', gameOptions.height / 2)
+        .attr('cx', function(d) { return d.x; })
+        .attr('cy', function(d) { return d.y; })
         .attr('r', gameOptions.padding)
         .call(drag)
         .style('fill', 'red');
+
 };
 
+var checkCollision = function() {
+  gameStats.score += 15;
+  var minDistance = gameOptions.padding * 2;
+  for (var i = 0; i < enemiesData.length; i++) {
+    var dx = enemiesData[i].x - playerData[0].x;
+    var dy = enemiesData[i].y - playerData[0].y;
+    var distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+    if (distance <= minDistance) {
+      collision();
+    }
+  }
+};
 
-
-
+var collision = function() {
+  gameStats.bestScore = Math.max(gameStats.score, gameStats.bestScore);
+  gameStats.score = 0;
+  console.log(0);
+};
 
 //render the enemies right away, then set an interval for them afterwards
 render();
-setInterval(render, 2000);
+setInterval(render, 3000);
+setInterval(checkCollision, 15);
+
 
