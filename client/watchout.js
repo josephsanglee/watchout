@@ -8,7 +8,8 @@ var gameOptions = {
 
 gameStats = {
   score: 0,
-  bestScore: 0
+  bestScore: 0,
+  collisions: 0
 };
 
 
@@ -23,20 +24,27 @@ var enemiesData = new Array(gameOptions.nEnemies);
 var randomizeEnemies = function () {
   for (var i = 0; i < enemiesData.length; i++) {
     enemiesData[i] = {id: i,
-                    x: Math.random() * gameOptions.width,
-                    y: Math.random() * gameOptions.height};
+                    x: gameOptions.padding + Math.random() * (gameOptions.width - 2 * gameOptions.padding),
+                    y: gameOptions.padding + Math.random() * (gameOptions.height - 2 * gameOptions.padding)};
   }
 };
 
-
+var limitPlayer = function(position, max) {
+  if (position < gameOptions.padding) {
+    return gameOptions.padding;
+  } else if (position > max - gameOptions.padding) {
+    return max - gameOptions.padding;
+  }
+  return position;
+};
 
 //defines dragging behavior of player circle
-var drag = d3.behavior.drag()
-             .on('dragstart', function() { player.style('fill', 'green'); })
-             .on('drag', function() {
-               player.attr('cx', d3.event.x)
-                     .attr('cy', d3.event.y); })
-             .on('dragend', function() { player.style('fill', 'red'); });
+// var drag = d3.behavior.drag()
+//              .on('dragstart', function() { player.style('fill', 'green'); })
+//              .on('drag', function() {
+//                player.attr('cx', limitPlayer(d3.event.x, gameOptions.width))
+//                      .attr('cy', limitPlayer(d3.event.y, gameOptions.height)); })
+//              .on('dragend', function() { player.style('fill', 'red'); });
 
 
 //creates player initially
@@ -51,10 +59,10 @@ var render = function() {
   var drag = d3.behavior.drag()
                .on('dragstart', function() { player.style('fill', 'green'); })
                .on('drag', function() {
-                 player.attr('cx', d3.event.x)
-                       .attr('cy', d3.event.y);
-                 playerData[0].x = d3.event.x;
-                 playerData[0].y = d3.event.y;
+                 playerData[0].x = limitPlayer(d3.event.x, gameOptions.width);
+                 playerData[0].y = limitPlayer(d3.event.y, gameOptions.height);
+                 player.attr('cx', playerData[0].x)
+                       .attr('cy', playerData[0].y);
                })
              .on('dragend', function() { player.style('fill', 'red'); });
 
@@ -76,7 +84,7 @@ var render = function() {
          .remove();
 
   enemies.transition()
-         .duration(3000)
+         .duration(2000)
          .attr('cx', function(d) { return d.x; })
          .attr('cy', function(d) { return d.y; });
   
@@ -91,6 +99,8 @@ var render = function() {
         .style('fill', 'red');
 
 };
+
+var hasCollided = false;
 
 var checkCollision = function() {
   gameStats.score += 15;
@@ -108,12 +118,26 @@ var checkCollision = function() {
 var collision = function() {
   gameStats.bestScore = Math.max(gameStats.score, gameStats.bestScore);
   gameStats.score = 0;
-  console.log(0);
+  hasCollided = true;
 };
 
+var updateScore = function() {
+  d3.select('.current').select('span')
+    .text('' + Math.floor(gameStats.score / 250));
+  d3.select('.highscore').select('span')
+    .text('' + Math.floor(gameStats.bestScore / 250));
+  if (hasCollided) {
+    gameStats.collisions++;
+    d3.select('.collisions').select('span')
+      .text('' + gameStats.collisions);
+    hasCollided = false;
+  }
+};
 //render the enemies right away, then set an interval for them afterwards
 render();
-setInterval(render, 3000);
+setInterval(updateScore, 250);
+setInterval(render, 2000);
 setInterval(checkCollision, 15);
+
 
 
