@@ -19,59 +19,23 @@ var gameBoard = d3.select('.board').append('svg:svg')
                   .style('background-color', 'grey');
 
 //creates all enemies initially
-
 var enemiesData = new Array(gameOptions.nEnemies);
+
 var randomizeEnemies = function () {
   for (var i = 0; i < enemiesData.length; i++) {
-    enemiesData[i] = {id: i,
-                    x: gameOptions.padding + Math.random() * (gameOptions.width - 2 * gameOptions.padding),
-                    y: gameOptions.padding + Math.random() * (gameOptions.height - 2 * gameOptions.padding)};
+    var x = gameOptions.padding + Math.random() * (gameOptions.width - 2 * gameOptions.padding);
+    var y = gameOptions.padding + Math.random() * (gameOptions.height - 2 * gameOptions.padding);
+    enemiesData[i] = {
+      id: i,
+      x: x,
+      y: y
+    };
   }
 };
 
-var limitPlayer = function(position, max) {
-  if (position < gameOptions.padding) {
-    return gameOptions.padding;
-  } else if (position > max - gameOptions.padding) {
-    return max - gameOptions.padding;
-  }
-  return position;
-};
-
-//defines dragging behavior of player circle
-// var drag = d3.behavior.drag()
-//              .on('dragstart', function() { player.style('fill', 'green'); })
-//              .on('drag', function() {
-//                player.attr('cx', limitPlayer(d3.event.x, gameOptions.width))
-//                      .attr('cy', limitPlayer(d3.event.y, gameOptions.height)); })
-//              .on('dragend', function() { player.style('fill', 'red'); });
-
-
-//creates player initially
-var playerData = [{id: 'player', x: gameOptions.width / 2, y: gameOptions.height / 2}];
-
-
-
-var render = function() {
-  randomizeEnemies();
-
-  //defines dragging behavior of player circle
-  var drag = d3.behavior.drag()
-               .on('dragstart', function() { player.style('fill', 'green'); })
-               .on('drag', function() {
-                 playerData[0].x = limitPlayer(d3.event.x, gameOptions.width);
-                 playerData[0].y = limitPlayer(d3.event.y, gameOptions.height);
-                 player.attr('cx', playerData[0].x)
-                       .attr('cy', playerData[0].y);
-               })
-             .on('dragend', function() { player.style('fill', 'red'); });
-
-
-
+var enemyRender = function() {
   var enemies = gameBoard.selectAll('circle.enemy')
                          .data(enemiesData, function(d) { return d.id; });
-  var player = gameBoard.selectAll('circle.player')
-                        .data(playerData, function(d) { return d.id; });
 
   enemies.enter()
          .append('svg:circle')
@@ -87,17 +51,42 @@ var render = function() {
          .duration(2000)
          .attr('cx', function(d) { return d.x; })
          .attr('cy', function(d) { return d.y; });
-  
+};
+
+//creates player initially
+var playerData = [{id: 'player', x: gameOptions.width / 2, y: gameOptions.height / 2}];
+
+var limitPlayer = function(position, max) {
+  if (position < gameOptions.padding) {
+    return gameOptions.padding;
+  } else if (position > max - gameOptions.padding) {
+    return max - gameOptions.padding;
+  }
+  return position;
+};
+
+playerRender = function() {
+  var drag = d3.behavior.drag()
+               .on('dragstart', function() { player.style('fill', 'green'); })
+               .on('drag', function() {
+                 playerData[0].x = limitPlayer(d3.event.x, gameOptions.width);
+                 playerData[0].y = limitPlayer(d3.event.y, gameOptions.height);
+                 player.attr('cx', playerData[0].x)
+                       .attr('cy', playerData[0].y);
+               })
+             .on('dragend', function() { player.style('fill', 'red'); });
+
+  var player = gameBoard.selectAll('circle.player')
+                        .data(playerData, function(d) { return d.id; });
 
   player.enter()
-        .append('svg:circle')
-        .attr('class', 'player')
-        .attr('cx', function(d) { return d.x; })
-        .attr('cy', function(d) { return d.y; })
-        .attr('r', gameOptions.padding)
-        .call(drag)
-        .style('fill', 'red');
-
+      .append('svg:circle')
+      .attr('class', 'player')
+      .attr('cx', function(d) { return d.x; })
+      .attr('cy', function(d) { return d.y; })
+      .attr('r', gameOptions.padding)
+      .call(drag)
+      .style('fill', 'red');
 };
 
 var hasCollided = false;
@@ -133,11 +122,18 @@ var updateScore = function() {
     hasCollided = false;
   }
 };
+
+var gameRender = function() {
+  randomizeEnemies();
+  enemyRender();
+  playerRender();
+
+};
 //render the enemies right away, then set an interval for them afterwards
-render();
+gameRender();
 setInterval(updateScore, 250);
-setInterval(render, 2000);
 setInterval(checkCollision, 15);
+setInterval(gameRender, 2000);
 
 
 
