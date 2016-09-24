@@ -2,7 +2,7 @@
 var gameOptions = {
   height: 450,
   width: 700,
-  nEnemies: 30,
+  nEnemies: 20,
   padding: 15
 };
 
@@ -42,7 +42,8 @@ var enemyRender = function() {
          .attr('class', 'enemy')
          .attr('cx', function(d) { return d.x; })
          .attr('cy', function(d) { return d.y; })
-         .attr('r', gameOptions.padding);
+         .attr('r', gameOptions.padding)
+         .style('fill', 'url(#image)');
 
   enemies.exit()
          .remove();
